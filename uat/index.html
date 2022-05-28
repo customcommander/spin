@@ -28,7 +28,9 @@
       }));
 
       function load() {
-        return a[i++];
+        return new Promise(r => setTimeout(() => {
+          r(a[i++]);
+        }, 2000));
       }
     </script>
   </body>

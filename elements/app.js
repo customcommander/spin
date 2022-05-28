@@ -41,9 +41,9 @@ customElements.define('spin-app', class extends LitElement {
     this._loadPanel();
   }
 
-  _loadPanel() {
+  async _loadPanel() {
     const id = nanoid();
-    const panel = JSON.stringify(window[this.loader]());
+    const panel = JSON.stringify(await window[this.loader]());
     this.panels = this.panels.concat([[id, panel]]); // array of pairs!
   }
 
