@@ -4,6 +4,8 @@ import {nanoid} from 'nanoid';
 import './panels.js';
 import './panel.js';
 
+const PANEL_ID_KEY = '@@spin/id';
+
 customElements.define('spin-app', class extends LitElement {
   static styles = css`
     :host {
@@ -43,13 +45,32 @@ customElements.define('spin-app', class extends LitElement {
 
   async _loadPanel() {
     const id = nanoid();
-    const panel = JSON.stringify(await window[this.loader]());
-    this.panels = this.panels.concat([[id, panel]]); // array of pairs!
+    let panel;
+    try {
+      let response = await window[this.loader]();
+      panel = Object.assign(response, {[PANEL_ID_KEY]: id});
+    } catch (e) {
+      panel = {
+        [PANEL_ID_KEY]: id,
+        head: {
+          title: 'Error!'
+        },
+        body: {
+          content: [
+            'Something occurred…'
+          ]
+        }
+      };
+    }
+    const panelJson = JSON.stringify(panel);
+    this.panels = this.panels.concat([[id, panelJson]]); // array of pairs!
   }
 
   _clickHandler(ev) {
-    const path = ev.composedPath();
-    if (path.some(el => el.className === 'load-panel')) {
+    const spinEl = ev.composedPath().find(el => el.dataset.spinEvent);
+    if (!spinEl) return;
+    const {name: spinEventName, ...spinEventData} = JSON.parse(spinEl.dataset.spinEvent);
+    if (spinEventName == 'PANEL_LOAD') {
       this._loadPanel();
     }
   }
@@ -58,8 +79,8 @@ customElements.define('spin-app', class extends LitElement {
     return html`
       <div id="app" @click=${this._clickHandler}>
         <spin-panels>
-        ${repeat(this.panels, ([id]) => id, ([, x]) => html`
-          <spin-panel content="${x}"></spin-panel>
+        ${repeat(this.panels, ([id]) => id, ([, json]) => html`
+          <spin-panel content="${json}"></spin-panel>
         `)}
         </spin-panels>
       </div>

@@ -15,22 +15,24 @@ customElements.define('spin-panel', class extends LitElement {
     .body {
       background-color: whitesmoke;
     }
-  `
+  `;
 
   static properties = {
     content: {
       type: Object,
       converter: value => JSON.parse(value)
     }
-  }
+  };
 
   render() {
     return html`
       <div class="head">${this.content.head.title}</div>
       <div class="body">
         ${this.content.body.content[0]}
-        <button class="load-panel">more panel</button>
+        <button data-spin-event="${JSON.stringify({name: 'PANEL_LOAD', from: this.content['@@spin/id']})}">
+          more panel
+        </button>
       </div>
     `;
-  }
+  };
 });
