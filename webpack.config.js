@@ -12,7 +12,10 @@ module.exports = {
     filename: '[name].js'
   },
   devServer: {
-    port: 9000
+    port: 9000,
+    client: {
+      overlay: false
+    }
   },
   plugins: [
     new HtmlWebpackPlugin({

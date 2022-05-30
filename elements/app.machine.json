@@ -1,0 +1,33 @@
+{
+  "id": "spin-machina",
+  "initial": "loading",
+  "states": {
+    "loading": {
+      "entry": ["displayLoadingPanel"],
+      "exit": ["focusPanel"],
+      "on": {
+        "PANEL_LOADED": {
+          "target": "ready",
+          "actions": ["displayPanel"]
+        }
+      }
+    },
+    "ready": {
+      "on": {
+        "PANEL_LOAD": {
+           "target": "loading"
+        },
+        "NAVIGATE_START": {
+          "target": "navigating"
+        }
+      }
+    },
+    "navigating": {
+      "on": {
+        "NAVIGATE_STOP": {
+          "target": "ready"
+        }
+      }
+    }
+  }
+}

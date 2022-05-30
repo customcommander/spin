@@ -20,7 +20,9 @@ customElements.define('spin-panel', class extends LitElement {
   static properties = {
     content: {
       type: Object,
-      converter: value => JSON.parse(value)
+    },
+    position: {
+      type: Number
     }
   };
 
@@ -29,7 +31,7 @@ customElements.define('spin-panel', class extends LitElement {
       <div class="head">${this.content.head.title}</div>
       <div class="body">
         ${this.content.body.content[0]}
-        <button data-spin-event="${JSON.stringify({name: 'PANEL_LOAD', from: this.content['@@spin/id']})}">
+        <button data-spin-event="${JSON.stringify({type: 'PANEL_LOAD', at: this.position+1})}">
           more panel
         </button>
       </div>

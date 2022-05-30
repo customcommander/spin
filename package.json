@@ -11,7 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "lit": "^2.2.5",
-    "nanoid": "^3.3.4"
+    "nanoid": "^3.3.4",
+    "xstate": "^4.32.1"
   },
   "devDependencies": {
     "html-webpack-plugin": "^5.5.0",
