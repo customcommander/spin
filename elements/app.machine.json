@@ -1,21 +1,44 @@
 {
   "id": "spin-machina",
-  "initial": "loading",
+  "initial": "preloading",
+  "context": {
+    "focus": 0
+  },
   "states": {
+    "preloading": {
+      "entry": [
+        "onPreload"
+      ],
+      "after": {
+        "50": {
+          "target": "loading"
+        }
+      }
+    },
     "loading": {
-      "entry": ["displayLoadingPanel"],
-      "exit": ["focusPanel"],
+      "entry": [
+        "focusPanel",
+        "loadPanel"
+      ],
       "on": {
         "PANEL_LOADED": {
           "target": "ready",
-          "actions": ["displayPanel"]
+          "actions": [
+            "setPanel"
+          ]
+        },
+        "PANEL_ERROR": {
+          "target": "ready",
+          "actions": [
+            "setErrorPanel"
+          ]
         }
       }
     },
     "ready": {
       "on": {
         "PANEL_LOAD": {
-           "target": "loading"
+          "target": "preloading"
         },
         "NAVIGATE_START": {
           "target": "navigating"

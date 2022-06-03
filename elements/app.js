@@ -1,16 +1,16 @@
-import {LitElement, html} from 'lit';
-import {repeat} from 'lit/directives/repeat.js';
+import {LitElement, html, css} from 'lit';
+import {animate} from '@lit-labs/motion';
 import {styleMap} from 'lit/directives/style-map.js';
+import {repeat} from 'lit/directives/repeat.js';
 import {nanoid} from 'nanoid';
-import {createMachine, interpret} from 'xstate';
+import {createMachine, interpret, assign} from 'xstate';
 import machineDefinition from './app.machine.json';
+import './breadcrumb.js';
 import './panels.js';
 import './panel.js';
 
-const PANEL_ID_KEY = '@@spin/id';
 
-const LOADING_PANEL = id => ({
-  [PANEL_ID_KEY]: id,
+const generateLoadingPanel = () => ({
   head: {
     title: 'Loading'
   },
@@ -21,20 +21,33 @@ const LOADING_PANEL = id => ({
   }
 });
 
-// TODO: use `err`
-const ERROR_PANEL = (id, err) => ({
-  [PANEL_ID_KEY]: id,
+const generateErrorPanel = (e) => ({
   head: {
     title: 'Error!'
   },
   body: {
     content: [
-      'Something occurred… :('
+      'Something occurred… :(' + e.message
     ]
   }
 });
 
 customElements.define('spin-app', class extends LitElement {
+  static styles = css`
+    :host {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #app {
+      display: grid;
+      grid-template-rows: 1fr 9fr;
+      width: 100%;
+      height: 100%;
+    }
+  `;
+
   static properties = {
     loader: {},
     panels: {
@@ -56,27 +69,35 @@ customElements.define('spin-app', class extends LitElement {
     this.focus = 0;
     this.#machina = createMachine(machineDefinition, {
       actions: {
-        displayLoadingPanel: (_, {at}) => {
-          const id = nanoid();
-          const json = JSON.stringify(LOADING_PANEL(id));
-          this.panels = this.panels.slice(0, at).concat([[id, json]]);
-          this.focus = this.panels.length - 1;
+        onPreload: assign(({focus}, {at}) => {
+          this.#setPanel(at || focus, generateLoadingPanel());
+          return {focus: at || focus};
+        }),
+        loadPanel: async () => {
+          try {
+            let panel = await window[this.loader]();
+            this.#machinaService.send({type: 'PANEL_LOADED', panel});
+          } catch (e) {
+            this.#machinaService.send({type: 'PANEL_ERROR', e});
+          }
         },
-        displayPanel: (_, {panel}) => {
-          const id = panel[PANEL_ID_KEY];
-          const json = JSON.stringify(panel);
-          this.panels = this.panels.slice(0, -1).concat([[id, json]]);
-          this.focus = this.panels.length - 1;
+        focusPanel: ({focus}) => {
+          this.focus = focus;
+        },
+        setErrorPanel: ({focus}, err) => {
+          this.#setPanel(focus, generateErrorPanel(err));
+        },
+        setPanel: ({focus}, {panel}) => {
+          this.#setPanel(focus, panel);
         }
       }
     });
   }
-  
+
   connectedCallback() {
     super.connectedCallback();
     this.#machinaService = interpret(this.#machina);
     this.#machinaService.start();
-    this._loadPanel();
   }
 
   disconnectedCallback() {
@@ -84,53 +105,55 @@ customElements.define('spin-app', class extends LitElement {
     this.#machinaService.stop();
   }
 
-  async _loadPanel() {
+  #setPanel(idx, panel) {
     const id = nanoid();
-    let panel;
-    try {
-      let response = await window[this.loader]();
-      panel = Object.assign(response, {[PANEL_ID_KEY]: id});
-    } catch (e) {
-      panel = ERROR_PANEL(id);
-    }
-    this.#machinaService.send({type: 'PANEL_LOADED', panel});
+    const panelJson = JSON.stringify(panel);
+    this.panels = this.panels.slice(0, idx).concat([[id, panelJson]]);
   }
 
-  _clickHandler(ev) {
-    const spinEl = ev.composedPath().find(el => el.dataset.spinEvent);
+  #dispatchClick(ev) {
+    const spinEl = ev.composedPath().find(el => el.dataset?.spinEvent);
     if (!spinEl) return;
     const spinEvent = JSON.parse(spinEl.dataset.spinEvent);
-    if (spinEvent.type == 'PANEL_LOAD') {
-      this.#machinaService.send(spinEvent); 
-      this._loadPanel();
-    }
+    this.#machinaService.send(spinEvent);
   }
 
-  #gridColumn(pos) {
-    const isHome = this.focus == 0;
-    const isPrimary = this.focus == pos;
-    const isSecondary = (this.focus - 1) == pos;
-    const isHiddenLeft = pos < (this.focus - 1);
+  #indexToPosition(idx) {
+    const isHome = this.focus == 0 && idx == 0;
+    const isPrimary = this.focus == idx;
+    const isSecondary = (this.focus - 1) == idx;
+    const isHiddenLeft = idx < (this.focus - 1);
+    let l, r;
 
-    const cols = ( isHome       ? [151, 154]
-                 : isPrimary    ? [152, 154]
-                 : isSecondary  ? [151, 152]
-                 : isHiddenLeft ? [151 - (this.focus - pos - 1), 151 - (this.focus - pos - 2)]
-                                : [154 + (pos - this.focus - 1), 154 + (pos - this.focus)]);
+    if (isHome) {
+      [l, r] = [0, 0];
+    } else if (isPrimary) {
+      [l, r] = [33, 0];
+    } else if (isSecondary) {
+      [l, r] = [0, 67];
+    } else if (isHiddenLeft) {
+      [l, r] = [ -33 * (this.focus - 1 - idx)
+               , 100 + (33 * (this.focus - 2 - idx)) ];
+    } else {
+      [l, r] = [ 100 + (33 * (this.focus + 1 - idx))
+               , -33 * (idx - this.focus) ];
+    }
 
-    return {gridColumn: `${cols[0]}/${cols[1]}`};
+    return {left: `${l}%`, right: `${r}%`};
   }
 
   render() {
+    const animOptions = { properties: ['left', 'right'] };
     return html`
-      <div @click=${this._clickHandler}>
+      <div id="app" @click=${this.#dispatchClick}>
+        <spin-breadcrumb></spin-breadcrumb>
         <spin-panels>
-        ${repeat(this.panels, ([id]) => id, ([id, json], pos) => html`
+        ${repeat(this.panels, ([id]) => id, ([, json], idx) => html`
           <spin-panel
-            id="${id}"
-            position="${pos}"
+            index="${idx}"
             content="${json}"
-            style=${styleMap(this.#gridColumn(pos))}></spin-panel>
+            style=${styleMap(this.#indexToPosition(idx))}
+            ${animate(animOptions)}></spin-panel>
         `)}
         </spin-panels>
       </div>

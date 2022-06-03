@@ -4,8 +4,10 @@ customElements.define('spin-panel', class extends LitElement {
   static styles = css`
     :host {
       display: grid;
-      grid-template-columns: 1fr;
       grid-template-rows: 1fr 9fr;
+      position: absolute;
+      top: 0;
+      bottom: 0;
     }
 
     .head {
@@ -21,7 +23,7 @@ customElements.define('spin-panel', class extends LitElement {
     content: {
       type: Object,
     },
-    position: {
+    index: {
       type: Number
     }
   };
@@ -31,7 +33,7 @@ customElements.define('spin-panel', class extends LitElement {
       <div class="head">${this.content.head.title}</div>
       <div class="body">
         ${this.content.body.content[0]}
-        <button data-spin-event="${JSON.stringify({type: 'PANEL_LOAD', at: this.position+1})}">
+        <button data-spin-event="${JSON.stringify({type: 'PANEL_LOAD', at: (this.index + 1)})}">
           more panel
         </button>
       </div>
