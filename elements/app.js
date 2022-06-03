@@ -54,6 +54,10 @@ customElements.define('spin-app', class extends LitElement {
       type: Array,
       state: true
     },
+    breadcrumb: {
+      type: Array,
+      state: true
+    },
     focus: {
       type: Number,
       state: true
@@ -66,6 +70,7 @@ customElements.define('spin-app', class extends LitElement {
   constructor() {
     super();
     this.panels = [];
+    this.breadcrumb = [];
     this.focus = 0;
     this.#machina = createMachine(machineDefinition, {
       actions: {
@@ -89,7 +94,12 @@ customElements.define('spin-app', class extends LitElement {
         },
         setPanel: ({focus}, {panel}) => {
           this.#setPanel(focus, panel);
-        }
+          this.breadcrumb = this.panels.map(([,title], idx) => [idx, idx == 0 ? 'Home' : title]);
+        },
+        goToPanel: assign((_, {to: focus}) => {
+          this.focus = focus;
+          return {focus};
+        })
       }
     });
   }
@@ -108,7 +118,7 @@ customElements.define('spin-app', class extends LitElement {
   #setPanel(idx, panel) {
     const id = nanoid();
     const panelJson = JSON.stringify(panel);
-    this.panels = this.panels.slice(0, idx).concat([[id, panelJson]]);
+    this.panels = this.panels.slice(0, idx).concat([[id, panel.head.title, panelJson]]);
   }
 
   #dispatchClick(ev) {
@@ -135,7 +145,7 @@ customElements.define('spin-app', class extends LitElement {
       [l, r] = [ -33 * (this.focus - 1 - idx)
                , 100 + (33 * (this.focus - 2 - idx)) ];
     } else {
-      [l, r] = [ 100 + (33 * (this.focus + 1 - idx))
+      [l, r] = [ 100 + (33 * Math.abs(this.focus + 1 - idx))
                , -33 * (idx - this.focus) ];
     }
 
@@ -144,11 +154,12 @@ customElements.define('spin-app', class extends LitElement {
 
   render() {
     const animOptions = { properties: ['left', 'right'] };
+    const breadcrumb = JSON.stringify(this.breadcrumb);
     return html`
       <div id="app" @click=${this.#dispatchClick}>
-        <spin-breadcrumb></spin-breadcrumb>
+        <spin-breadcrumb path="${breadcrumb}"></spin-breadcrumb>
         <spin-panels>
-        ${repeat(this.panels, ([id]) => id, ([, json], idx) => html`
+        ${repeat(this.panels, ([id]) => id, ([,, json], idx) => html`
           <spin-panel
             index="${idx}"
             content="${json}"

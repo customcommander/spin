@@ -40,14 +40,17 @@
         "PANEL_LOAD": {
           "target": "preloading"
         },
-        "NAVIGATE_START": {
-          "target": "navigating"
+        "NAVIGATE": {
+          "target": "navigating",
+          "actions": [
+            "goToPanel"
+          ]
         }
       }
     },
     "navigating": {
-      "on": {
-        "NAVIGATE_STOP": {
+      "after": {
+        "100": {
           "target": "ready"
         }
       }
