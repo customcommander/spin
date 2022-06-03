@@ -54,10 +54,6 @@ customElements.define('spin-app', class extends LitElement {
       type: Array,
       state: true
     },
-    breadcrumb: {
-      type: Array,
-      state: true
-    },
     focus: {
       type: Number,
       state: true
@@ -70,7 +66,6 @@ customElements.define('spin-app', class extends LitElement {
   constructor() {
     super();
     this.panels = [];
-    this.breadcrumb = [];
     this.focus = 0;
     this.#machina = createMachine(machineDefinition, {
       actions: {
@@ -94,7 +89,6 @@ customElements.define('spin-app', class extends LitElement {
         },
         setPanel: ({focus}, {panel}) => {
           this.#setPanel(focus, panel);
-          this.breadcrumb = this.panels.map(([,title], idx) => [idx, idx == 0 ? 'Home' : title]);
         },
         goToPanel: assign((_, {to: focus}) => {
           this.focus = focus;
@@ -117,8 +111,9 @@ customElements.define('spin-app', class extends LitElement {
 
   #setPanel(idx, panel) {
     const id = nanoid();
+    const {head: {title}} = panel;
     const panelJson = JSON.stringify(panel);
-    this.panels = this.panels.slice(0, idx).concat([[id, panel.head.title, panelJson]]);
+    this.panels = this.panels.slice(0, idx).concat([[id, title, panelJson]]);
   }
 
   #dispatchClick(ev) {
@@ -152,17 +147,21 @@ customElements.define('spin-app', class extends LitElement {
     return {left: `${l}%`, right: `${r}%`};
   }
 
+  #generateBreadcrumb() {
+    return JSON.stringify(
+      this.panels.map(([, title], idx) => [idx, idx == 0 ? 'Home' : title]));
+  }
+
   render() {
     const animOptions = { properties: ['left', 'right'] };
-    const breadcrumb = JSON.stringify(this.breadcrumb);
     return html`
       <div id="app" @click=${this.#dispatchClick}>
-        <spin-breadcrumb path="${breadcrumb}"></spin-breadcrumb>
+        <spin-breadcrumb path=${this.#generateBreadcrumb()}></spin-breadcrumb>
         <spin-panels>
         ${repeat(this.panels, ([id]) => id, ([,, json], idx) => html`
           <spin-panel
-            index="${idx}"
-            content="${json}"
+            index=${idx}
+            content=${json}
             style=${styleMap(this.#indexToPosition(idx))}
             ${animate(animOptions)}></spin-panel>
         `)}

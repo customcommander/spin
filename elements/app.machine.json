@@ -50,7 +50,7 @@
     },
     "navigating": {
       "after": {
-        "100": {
+        "50": {
           "target": "ready"
         }
       }

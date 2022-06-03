@@ -33,7 +33,7 @@ customElements.define('spin-panel', class extends LitElement {
       <div class="head">${this.content.head.title}</div>
       <div class="body">
         ${this.content.body.content[0]}
-        <button data-spin-event="${JSON.stringify({type: 'PANEL_LOAD', at: (this.index + 1)})}">
+        <button data-spin-event=${JSON.stringify({type: 'PANEL_LOAD', at: (this.index + 1)})}>
           more panel
         </button>
       </div>

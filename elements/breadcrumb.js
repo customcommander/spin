@@ -29,13 +29,11 @@ customElements.define('spin-breadcrumb', class extends LitElement {
   render() {
     return html`
       <nav>
-        <button>BACK</button>
       ${repeat(this.path, ([idx]) => idx, ([idx, title]) => html`
-        <button data-spin-event="${this.#generateNavigateEvent(idx)}">
+        <button data-spin-event=${this.#generateNavigateEvent(idx)}>
           ${title}
         </button>
       `)}
-        <button>FORWARD</button>
       </nav>
     `;
   };
