@@ -9,7 +9,6 @@ import './breadcrumb.js';
 import './panels.js';
 import './panel.js';
 
-
 const generateLoadingPanel = () => ({
   head: {
     title: 'Loading'
@@ -27,7 +26,9 @@ const generateErrorPanel = (e) => ({
   },
   body: {
     content: [
-      'Something occurred… :(' + e.message
+      {type: 'text', id: id(), content: [
+        'error: '+ e.message
+      ]}
     ]
   }
 });
@@ -42,7 +43,7 @@ customElements.define('spin-app', class extends LitElement {
 
     #app {
       display: grid;
-      grid-template-rows: 1fr 9fr;
+      grid-template-rows: 50px 1fr;
       width: 100%;
       height: 100%;
     }
@@ -50,6 +51,9 @@ customElements.define('spin-app', class extends LitElement {
 
   static properties = {
     loader: {},
+    op: {
+      type: Object
+    },
     panels: {
       type: Array,
       state: true
@@ -73,19 +77,19 @@ customElements.define('spin-app', class extends LitElement {
           this.#setPanel(at || focus, generateLoadingPanel());
           return {focus: at || focus};
         }),
-        loadPanel: async () => {
+        loadPanel: async (_, payload) => {
           try {
-            let panel = await window[this.loader]();
+            let panel = await window[this.loader](payload?.op || this.op);
             this.#machinaService.send({type: 'PANEL_LOADED', panel});
           } catch (e) {
-            this.#machinaService.send({type: 'PANEL_ERROR', e});
+            this.#machinaService.send({type: 'PANEL_ERROR', error: e});
           }
         },
         focusPanel: ({focus}) => {
           this.focus = focus;
         },
-        setErrorPanel: ({focus}, err) => {
-          this.#setPanel(focus, generateErrorPanel(err));
+        setErrorPanel: ({focus}, {error}) => {
+          this.#setPanel(focus, generateErrorPanel(error));
         },
         setPanel: ({focus}, {panel}) => {
           this.#setPanel(focus, panel);

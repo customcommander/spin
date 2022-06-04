@@ -12,25 +12,43 @@
     </style>
   </head>
   <body>
-    <spin-app loader="load"></spin-app>
+    <spin-app loader="load" op="&quot;home&quot;"></spin-app>
     <script>
-      var i = 0;
-      var a = Array.from(Array(1000), (_, x) => ({
-        type: 'panel',
+      let id = (i => () => `id_${++i}`)(0);
+
+      const panel = (title, content) => ({
+        id: id(),
         head: {
-          title: `panel #${x}`
+          title
         },
         body: {
-          content: [
-            x
-          ]
+          content
         }
-      }));
+      });
 
-      function load() {
-        return new Promise(r => setTimeout(() => {
-          r(a[i++]);
-        }, 2000));
+      const menu = (items) => ({
+        id: id(),
+        type: 'menu',
+        items
+      });
+
+      const text = (items) => ({
+        id: id(),
+        type: 'text',
+        content: items
+      });
+
+      const panels = {
+        home: panel('Home', [
+          menu([
+            {id: id(), name: 'Menu'},
+            {id: id(), name: 'Text'}
+          ])
+        ])
+      };
+
+      function load(name) {
+        return panels[name];
       }
     </script>
   </body>
