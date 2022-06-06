@@ -9,7 +9,6 @@ customElements.define('spin-text', class extends LitElement {
   }
 
   render() {
-    console.log(this.content)
     return html`
       ${map(this.content, txt => html`
         <p>${txt}</p>

@@ -39,16 +39,19 @@
       });
 
       const panels = {
-        home: panel('Home', [
+        home: () => panel('Home', [
           menu([
-            {id: id(), name: 'Menu'},
+            {id: id(), name: 'Menu', op: "menu"},
             {id: id(), name: 'Text'}
           ])
+        ]),
+        menu: () => panel('Menu', [
+          text(["foo bar"])
         ])
       };
 
       function load(name) {
-        return panels[name];
+        return panels[name]();
       }
     </script>
   </body>

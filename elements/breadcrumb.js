@@ -19,18 +19,11 @@ customElements.define('spin-breadcrumb', class extends LitElement {
     this.path = [];
   }
 
-  #generateNavigateEvent(idx) {
-    return JSON.stringify({
-      type: 'NAVIGATE',
-      to: idx
-    });
-  }
-
   render() {
     return html`
       <nav>
       ${repeat(this.path, ([idx]) => idx, ([idx, title]) => html`
-        <button data-spin-event=${this.#generateNavigateEvent(idx)}>
+        <button data-spin=${JSON.stringify({type: 'NAVIGATE', to: idx})}>
           ${title}
         </button>
       `)}

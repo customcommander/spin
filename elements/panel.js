@@ -29,9 +29,6 @@ customElements.define('spin-panel', class extends LitElement {
   static properties = {
     content: {
       type: Object,
-    },
-    index: {
-      type: Number
     }
   };
 

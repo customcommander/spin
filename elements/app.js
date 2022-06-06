@@ -73,9 +73,10 @@ customElements.define('spin-app', class extends LitElement {
     this.focus = 0;
     this.#machina = createMachine(machineDefinition, {
       actions: {
-        onPreload: assign(({focus}, {at}) => {
-          this.#setPanel(at || focus, generateLoadingPanel());
-          return {focus: at || focus};
+        onPreload: assign(({focus}, {from}) => {
+          const at = from != null ? from + 1 : focus;
+          this.#setPanel(at, generateLoadingPanel());
+          return {focus: at};
         }),
         loadPanel: async (_, payload) => {
           try {
@@ -121,10 +122,12 @@ customElements.define('spin-app', class extends LitElement {
   }
 
   #dispatchClick(ev) {
-    const spinEl = ev.composedPath().find(el => el.dataset?.spinEvent);
-    if (!spinEl) return;
-    const spinEvent = JSON.parse(spinEl.dataset.spinEvent);
-    this.#machinaService.send(spinEvent);
+    const payload = ev.composedPath().reduce((acc, el) => {
+      const p = el.dataset?.spin;
+      return p ? Object.assign(acc ?? {}, JSON.parse(p)) : acc;
+    }, null);
+    if (payload?.type == null) return;
+    this.#machinaService.send(payload);
   }
 
   #indexToPosition(idx) {
@@ -164,7 +167,7 @@ customElements.define('spin-app', class extends LitElement {
         <spin-panels>
         ${repeat(this.panels, ([id]) => id, ([,, json], idx) => html`
           <spin-panel
-            index=${idx}
+            data-spin=${JSON.stringify({from: idx})}
             content=${json}
             style=${styleMap(this.#indexToPosition(idx))}
             ${animate(animOptions)}></spin-panel>
