@@ -2,7 +2,8 @@
   "id": "spin-machina",
   "initial": "preloading",
   "context": {
-    "focus": 0
+    "focus": 0,
+    "op": {}
   },
   "states": {
     "preloading": {

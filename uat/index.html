@@ -46,7 +46,11 @@
           ])
         ]),
         menu: () => panel('Menu', [
-          text(["foo bar"])
+          text(["foo bar", "bar baz", "baz bat"]),
+          menu([
+            {id: id(), name: 'submenu', op: "home"}
+          ])
+
         ])
       };
 

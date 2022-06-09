@@ -73,14 +73,14 @@ customElements.define('spin-app', class extends LitElement {
     this.focus = 0;
     this.#machina = createMachine(machineDefinition, {
       actions: {
-        onPreload: assign(({focus}, {from}) => {
+        onPreload: assign(({focus}, {from, op}) => {
           const at = from != null ? from + 1 : focus;
           this.#setPanel(at, generateLoadingPanel());
-          return {focus: at};
+          return {focus: at, op};
         }),
-        loadPanel: async (_, payload) => {
+        loadPanel: async (ctx) => {
           try {
-            let panel = await window[this.loader](payload?.op || this.op);
+            let panel = await window[this.loader](ctx?.op || this.op);
             this.#machinaService.send({type: 'PANEL_LOADED', panel});
           } catch (e) {
             this.#machinaService.send({type: 'PANEL_ERROR', error: e});
@@ -122,10 +122,11 @@ customElements.define('spin-app', class extends LitElement {
   }
 
   #dispatchClick(ev) {
-    const payload = ev.composedPath().reduce((acc, el) => {
-      const p = el.dataset?.spin;
-      return p ? Object.assign(acc ?? {}, JSON.parse(p)) : acc;
-    }, null);
+    const payload =
+      ev.composedPath().reduce((acc, el) =>
+        el.dataset?.spin
+          ? Object.assign(acc ?? {}, JSON.parse(el.dataset.spin))
+          : acc, null);
     if (payload?.type == null) return;
     this.#machinaService.send(payload);
   }
