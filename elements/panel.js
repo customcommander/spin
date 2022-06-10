@@ -13,6 +13,7 @@ customElements.define('spin-panel', class extends LitElement {
       top: 0;
       bottom: 0;
       overflow: hidden;
+      border-right: 1px solid black;
     }
 
     .head {
